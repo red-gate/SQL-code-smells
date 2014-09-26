@@ -9,7 +9,7 @@ SQL code smells
 - <a href="#design">Problems_With_Database_Design</a>
 - <a href="#tabledesign">Problems_with_Table_Design</a>
 - <a href="#datatypes">Problems_with_Data_Types</a>
-- [Problems with Expressions](Problems_with_Expressions)
+- <a href="#expressions">Problems_with_Expressions</a>
 - [Difficulties with Query Syntax](Difficulties_with_Query_Syntax)
 - [Problems with Naming](Problems_with_Naming)
 - [Problems with Routines](Problems_with_Routines)
@@ -181,10 +181,102 @@ aggregations, or both.
 <a name="datatypes"></a>
 #Problems with Data Types 
 
+##19) Using VARCHAR(1), VARCHAR(2), etc.
+Columns of short or fixed length should have a fixed
+size since variable-length types have a disproportionate
+storage overhead. For a large table, this could be
+significant.
+
+See: [SR0009: Avoid using types of variable length that are size 1 or 2] (http://msdn.microsoft.com/en-us/library/dd193263(v=vs.100).aspx)
+
+##20)Using deprecated language elements such as the TEXT/NTEXT data types
+There is no good reason to use TEXT or NTEXT.
+They were a first, flawed attempt at BLOB storage and
+are there only for backward compatibility. Likewise,
+the WRITETEXT, UPDATETEXT and READTEXT
+statements are also deprecated. All this complexity
+has been replaced by the VARCHAR(MAX) and
+NVARCHAR(MAX) data types, which work with all of
+SQL Server’s string functions.
+
+##21) Using MONEY data type
+The MONEY data type confuses the storage of data
+values with their display, though it clearly suggests, by
+its name, the sort of data held. Using the DECIMAL
+data type is almost always better.
+
+##22)Using FLOAT or REAL data types
+The FLOAT (8 byte) and REAL (4 byte) data types are
+suitable only for specialist scientific use since they are
+approximate types with an enormous range
+(-1.79E+308 to -2.23E-308, and 2.23E-308 to 1.79E+308, in
+the case of FLOAT). Any other use needs to be regarded
+as suspect, and a FLOAT or REAL used as a key or found
+in an index needs to be investigated. The DECIMAL
+type is an exact data type and has an impressive range
+from -10^38+1 through 10^38-1. Although it requires
+more storage than the FLOAT or REAL types, it is
+generally a better choice.
+
+##23) Mixing parameter data types in a COALESCE expression
+The result of the COALESCE expression (which is
+shorthand for a CASE statement) is the first non-
+NULL expression in the list of expressions provided as
+arguments. Mixing data types can result in errors or
+data truncation.
+
+##24) Using DATETIME or DATETIME2 when you’re concerned only with the date
+Even with data storage being so cheap, a saving in a
+data type adds up and makes comparison and
+calculation easier. When appropriate, use the DATE
+or SMALLDATETIME type.
+
+##25)  Using DATETIME or DATETIME2 when you’re merely recording the time of day
+Being parsimonious with memory is important for large
+tables, not only to save space but also to reduce I/O
+activity during access. When appropriate, use the TIME
+or SMALLDATETIME type.
+
+##26)  Using sql_variant inappropriately
+The sql_variant type is not your typical data type. It
+stores values from a number of different data types and
+is used internally by SQL Server. It is hard to imagine a
+valid use in a relational database. It cannot be returned
+to an application via ODBC except as binary data, and it
+isn’t supported in Microsoft Azure SQL Database.
+
+##27) Using the TIME data type to store a duration rather than a point in time
+Durations are best stored as a start date/time value and
+end date/time value. This is especially true given that
+you usually need the start and end points to calculate
+a duration. It is possible to use a TIME data type if the
+duration is less than 24 hours, but this is not what the
+type is intended for and can cause confusion for the
+next person who has to maintain your code.
+
+##28) Using VARCHAR(MAX) or NVARCHAR(MAX) when it isn’t necessary
+VARCHAR types that specify a number rather than
+MAX have a finite maximum length and can be stored
+in-page, whereas MAX types are treated as BLOBS
+and stored off-page, preventing online re-indexing.
+Use MAX only when you need more than 8000 bytes
+(4000 characters for NVARCHAR, 8000 characters for
+VARCHAR).
+
+##29) Using VARCHAR rather than NVARCHAR for anything that requires internationalization, such as names or addresses
+You can’t require everyone to stop using national
+characters or accents any more. The 1950s are long
+gone. Names are likely to have accents in them if spelled
+properly, and international addresses and language
+strings will almost certainly have accents and national
+characters that can’t be represented by 8-bit ASCII!
+
+<a name="expressions"></a>
+#Problems with Expressions 
+
+##30) 
 
 
-
-#Problems with Expressions <a name="Problems_with_Expressions"></a>
 #Difficulties with Query Syntax <a name="Difficulties_with_Query_Syntax"></a>
 #Problems with Naming <a name="Problems_with_Naming"></a>
 
