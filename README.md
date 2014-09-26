@@ -71,15 +71,303 @@ In designing a database application, there is sometimes functionality that canno
 #Problems with Naming <a name="Problems_with_Naming"></a>
 #Problems with Routines <a name="Problems_with_Routines"></a>
 
+##73) Including few or no comments
+Being antisocial is no excuse. Neither is being in a hurry.
+Your scripts should be filled with relevant comments,
+30% at a minimum. This is not just to help your
+colleagues, but also to help you in the future. What
+seems obvious today will be as clear as mud tomorrow,
+unless you comment your code properly. In a routine,
+comments should include intro text in the header as
+well as examples of usage.
+
+##74) Excessively ‘overloading’ routines
+Stored procedures and functions are compiled with
+query plans. If your routine includes multiple queries
+and you use a parameter to determine which query
+to run, the query optimizer cannot come up with an
+efficient execution plan. Instead, break the code into a
+series of procedures with one ‘wrapper’ procedure that
+determines which of the others to run.
+
+##75) Creating routines (especially stored procedures) as ‘God Routines’ or ‘UberProcs’
+Occasionally, long routines provide the most efficient
+way to execute a process, but occasionally they just grow
+like algae as functionality is added. They are difficult
+to maintain and likely to be slow. Beware particularly
+of those with several exit points and different types of
+result set.
+
+##76) Creating stored procedures that return more than one result set
+Although applications can use stored procedures
+that return multiple result sets, the results cannot be
+accessed within SQL. Although they can be used by
+the application via ODBC, the order of tables will be
+significant and changing the order of the result sets in a
+refactoring will then break the application in ways that
+may not even cause an error, and will be difficult to test
+automatically from within SQL.
+
+##77) Too many parameters in stored procedures or functions
+The general consensus is that a lot of parameters can
+make a routine unwieldy and prone to errors. You can
+use table-valued parameters (TVPs) or XML parameters
+when it is essential to pass data structures or lists into a
+routine.
+
+##78) Duplicated code
+This is a generic code smell. If you discover an error
+in code that has been duplicated, the error needs to be
+fixed in several places.  
+Although duplication of code in SQL is often a code
+smell, it is not necessarily so. Duplication is sometimes
+done intentionally where large result sets are involved
+because generic routines frequently don’t perform
+well. Sometimes quite similar queries require very
+different execution plans. There is often a trade-off
+between structure and performance, but sometimes the
+performance issue is exaggerated.  
+Although you can get a performance hit from using
+functions and procedures to prevent duplication by
+encapsulating functionality, it isn’t often enough to
+warrant deliberate duplication of code.
+
+##79) High cyclomatic complexity
+Sometimes it is important to have long procedures,
+maybe with many code routes. However, if a high
+proportion of your procedures or functions are
+excessively complex, you’ll likely have trouble
+identifying the atomic processes within your
+application. A high average cyclomatic complexity in
+routines is a good sign of technical debt.
+
+##80) Using an ORDER BY clause within a view
+You cannot use the ORDER BY clause without the TOP
+clause or the OFFSET…FETCH clause in views (or inline
+functions, derived tables, or subqueries). Even if you
+resort to using the TOP 100% trick, the resulting order
+isn’t guaranteed. Specify the ORDER BY clause in the
+query that calls the view.
+
+##81) Unnecessarily using stored procedures or table-valued functions where a view is sufficient
+Stored procedures are not designed for delivering
+result sets. You can use stored procedures as such with
+INSERT…EXEC, but you can’t nest INSERT…EXEC so
+you’ll soon run into problems. If you do not need to
+provide input parameters, then use views, otherwise use
+table valued functions.
+
+##82) Using Cursors
+SQL Server originally supported cursors to more easily
+port dBase II applications to SQL Server, but even then,
+you can sometimes use a WHILE loop as an effective
+substitute. However, modern versions of SQL Server
+provide window functions and the CROSS/OUTER
+APPLY syntax to cope with most of the traditional valid
+uses of the cursor.
+
+##83) Overusing CLR routines
+There are many valid uses of CLR routines, but they
+are often suggested as a way to pass data between
+stored procedures or to get rid of performance
+problems. Because of the maintenance overhead, added
+complexity, and deployment issues associated with CLR
+routines, it is best to use them only after all SQL-based
+solutions to a problem have been found wanting or
+when you cannot use SQL to complete a task.
+
+##84) Excessive use of the WHILE loop
+A WHILE loop is really a type of cursor. Although
+a WHILE loop can be useful for several inherently
+procedural tasks, you can usually find a better relational
+way of achieving the same results. The database engine
+is heavily optimized to perform set-based operations
+rapidly. Don’t fight it!
+
+##85) Relying on the INSERT…EXEC statement
+In a stored procedure, you must use an INSERT…
+EXEC statement to retrieve data via another stored
+procedure and insert it into the table targeted by the
+first procedure. However, you cannot nest this type
+of statement. In addition, if the referenced stored
+procedure changes, it can cause the first procedure to
+generate an error.
+
+##86) Forgetting to set an output variable
+The values of the output parameters must be explicitly
+set in all code paths, otherwise the value of the output
+variable will be NULL. This can result in the accidental
+propagation of NULL values. Good defensive coding
+requires that you initialize the output parameters to a
+default value at the start of the procedure body.
+
+See '[SR0013: Output parameter (parameter) is not populated in all code paths'] (http://msdn.microsoft.com/en-us/library/dd172136(v=vs.100).aspx)
+
+##87) Specifying parameters by order rather than assignment, where there are more than four parameters
+When calling a stored procedure, it is generally better
+to pass in parameters by assignment rather than just
+relying on the order in which the parameters are defined
+within the procedure. This makes the code easier to
+understand and maintain. As with all rules, there are
+exceptions. It doesn’t really become a problem when
+there are less than a handful of parameters. Also,
+natively compiled procedures work fastest by passing in
+parameters by order.
+
+##88) Setting the QUOTED_IDENTIFIER or ANSI_NULLS options inside stored procedures
+Stored procedures use the SET settings specified
+at execute time, except for SET ANSI_NULLS and
+SET QUOTED_IDENTIFIER. Stored procedures
+that specify either the SET ANSI_NULLS or SET
+QUOTED_IDENTIFIER use the setting specified at
+stored procedure creation time. If used inside a stored
+procedure, any such SET command is ignored.
+
+##89) Creating a routine with ANSI_NULLS or QUOTED_IDENTIFIER options set to OFF.
+At the time the routine is created (parse time), both
+options should normally be set to ON. They are ignored
+on execution. The reason for keeping Quoted Identifiers
+ON is that it is necessary when you are creating or
+changing indexes on computed columns or indexed
+views. If set to OFF, then CREATE, UPDATE, INSERT,
+and DELETE statements on tables with indexes on
+computed columns or indexed views will fail. SET
+QUOTED_IDENTIFIER must be ON when you are
+creating a filtered index or when you invoke XML data
+type methods. ANSI_NULLS will eventually be set to
+ON and this ISO compliant treatment of NULLS will not be switchable to OFF.
+
+##90) Updating a primary key column
+Updating a primary key column is not by itself always
+bad in moderation. However, the update does come
+with considerable overhead when maintaining
+referential integrity. In addition, if the primary key is
+also a clustered index key, the update generates more
+overhead in order to maintain the integrity of the table.
+
+##91) Overusing hints to force a particular behaviour in joins
+Hints do not take into account the changing number
+of rows in the tables or the changing distribution of
+the data between the tables. The query optimizer is
+generally smarter than you, and a lot more patient.
+
+##92) Using the ISNUMERIC function
+The ISNUMERIC function returns 1 when the input
+expression evaluates to a valid numeric data type;
+otherwise it returns 0. The function also returns 1 for
+some characters that are not numbers, such as plus (+),
+minus (-), and valid currency symbols such as the dollar
+sign ($).
+
+##93) Using the CHARINDEX function in a WHERE Clause
+Avoid using CHARINDEX in a WHERE clause to match
+strings if you can use LIKE (without a leading wildcard
+expression) to achieve the same results.
+
+##94) Using the NOLOCK hint
+Avoid using the NOLOCK hint. It is much better and
+safer to specify the correct isolation level instead. To
+use NOLOCK, you would need to be very confident
+that your code is safe from the possible problems that
+the other isolation levels protect against. The NOLOCK
+hint forces the query to use a read uncommitted
+isolation level, which can result in dirty reads,
+non-repeatable reads and phantom reads. In certain
+circumstances, you can sacrifice referential integrity
+and end up with missing rows or duplicate reads of
+the same row.
+
+##95) Using a WAITFOR DELAY/TIME statement in a routine or batch
+SQL routines or batches are not designed to include
+artificial delays. If many WAITFOR statements are
+specified on the same server, too many threads can be
+tied up waiting. Also, including WAITFOR will delay the
+completion of the SQL Server process and can result in
+a timeout message in the application.
+
+##96) Using SET ROWCOUNT to specify how many rows should be returned
+We had to use this option until the TOP clause (with
+ORDER BY) was implemented. The TOP option is much
+easier for the query optimizer.
+
+##97) Using TOP 100% in views, inline functions, derived tables, subqueries, and common table expressions (CTEs).
+This is usually a reflex action to seeing the error The
+ORDER BY clause is invalid in views,
+inline functions, derived tables,
+subqueries, and common table expressions,
+unless TOP or FOR XML is also specified. The
+message is usually a result of your ORDER BY clause
+being included in the wrong statement. You should
+include it only in the outermost query.
+
+##98) Duplicating names of objects of different types
+Although it is sometimes necessary to use the same
+name for the same type of object in different schemas,
+it is never necessary to do it for different object types
+and it can be very confusing. You would never want a
+SalesStaff table and SalesStaff view and SalesStaff stored
+procedure.
+
+##99) Using WHILE (not done) loops without an error exit
+WHILE loops must always have an error exit. The
+condition that you set in the WHILE statement may
+remain true even if the loop is spinning on an error.
+
+##100) Using a PRINT statement or statement that returns a result in a trigger
+Triggers are designed for enforcing data rules, not for
+returning data or information. Developers often embed
+PRINT statements in triggers during development to
+provide a crude idea of how the code is progressing, but
+the statements need to be removed or commented out
+before the code is promoted beyond development.
+
+
+##101) Using TOP without ORDER BY
+Using TOP without an ORDER BY clause in a SELECT
+statement is meaningless and cannot be guaranteed to
+give consistent results.
+
+##102) Using a CASE statement without the ELSE clause
+Always specify a default option even if you believe that
+it is impossible for that condition to happen. Someone
+might change the logic, or you could be wrong in
+thinking a particular outcome is impossible.
+
+##103) Using EXECUTE(string)
+Don’t use EXEC to run dynamic SQL. It is there only for
+backward compatibility and is a commonly used vector
+for SQL injection. Use sp_executesql instead because
+it allows parameter substitutions for both inputs and
+outputs and also because the execution plan that sp_
+executesql produces is more likely to be reused.
+
+##104) Using the GROUP BY ALL <column>, GROUP BY <number>, COMPUTE, or COMPUTE BY clause
+The GROUP BY ALL <column> clause and the GROUP BY <number> clause are deprecated. There are other ways to perform these operations using the standard GROUP BY syntax. The COMPUTE and COMPUTE BY operations were devised for printed summary results. The ROLLUP clause is a better alternative.
+
+##105) Using numbers in the ORDER BY clause to specify column order
+It is certainly possible to specify non-negative integers to represent the columns in an ORDER BY clause, based on how those columns appear in the select list, but this approach makes it difficult to understand the code at a glance and can lead to unexpected consequences when  you forget you’ve done it and alter the order of the columns in the select list.
+
+##106) Using unnecessary three-part and four-part column references in a select list
+Column references should be two-part names when there is any chance of ambiguity due to column names being duplicated in other tables. Three-part column names might be necessary in a join if you have duplicate table names, with duplicate column names, in different schemas, in which case, you ought to be using aliases.
+The same goes for cross-database joins.
+
+##107) Using RANGE rather than ROWS in SQL Server 2012
+The implementation of the RANGE option in a window frame ORDER BY clause is inadequate for any serious use. Stick to the ROWS option whenever possible and try to avoid ordering without framing.
+
+##108) Doing complex error-handling in a transaction before the ROLLBACK command
+The database engine releases locks only when the transaction is rolled back or committed. It is unwise to delay this because other processes may be forced to wait. Do any complex error handling after the ROLLBACK command wherever possible. 
+
+##109) Not defining a default value for a SELECT assignment to a variable
+If an assignment is made to a variable within a SELECT…FROM statement and no result is returned, that variable will retain its current value. If no rows are returned, the variable assignment should be explicit, so you should initialize the variable with a default value.
+
+##110) Not defining a default value for a SET assignment that is the result of a query
+If a variable’s SET assignment is based on a query result and the query returns no rows, the variable is set to NULL. In this case, you should assign a default value to the variable unless you want it to be NULL.
+
+##111) The value of a nullable column is not checked for NULLs when used in an expression
+If you are using a nullable column in an expression, you should use a COALESCE or CASE expression or use the ISNULL(column, default_value) function to first verify whether the value is NULL.
 
 ##112) Using the NULLIF expression
-The NULLIF expression compares two expressions
-and returns the first one if the two are not equal. If the
-expressions are equal then NULLIF returns a NULL
-value of the data type of the first expression. NULLIF is
-syntactic sugar. Use the CASE statement instead so that
-ordinary folks can understand what you’re trying to do.
-The two are treated identically.
+The NULLIF expression compares two expressions and returns the first one if the two are not equal. If the expressions are equal then NULLIF returns a NULL value of the data type of the first expression. NULLIF is syntactic sugar. Use the CASE statement instead so that ordinary folks can understand what you’re trying to do. The two are treated identically.
 
 ##113) Not putting all the DDL statements at the beginning of the batch
 Don’t mix data manipulation language (DML) statements with data definition language (DDL) statements. Instead, put all the DDL statements at the beginning of your procedures or batches.
