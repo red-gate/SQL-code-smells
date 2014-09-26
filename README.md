@@ -5,8 +5,8 @@ SQL code smells
 
 #Contents
 
-- <a href="#intro">(Introduction)</a>
-- [Problems with Database](Problems_With_Database_Design)
+- <a href="#intro">Introduction</a>
+- <a href="design">Problems_With_Database_Design</a>
 - [Problems with Table Design](Problems_with_Table_Design)
 - [Problems with Data Types](Problems_with_Data_Types)
 - [Problems with Expressions](Problems_with_Expressions)
@@ -63,7 +63,7 @@ Quite often, the database designer will need to create an interface to provide a
 ##7) Using command-line and OLE automation to access server-based resources 
 In designing a database application, there is sometimes functionality that cannot be done purely in SQL, usually when other server-based, or network-based resources must be accessed. Now that SQL Server’s integration with PowerShell is so much more mature, it is better to use that, rather than ```xp_cmdshell or sp_OACreate``` (or similar), to access the file system or other server-based resources. This needs some thought and planning. You should also use SQL Agent jobs when possible to schedule your server-related tasks. This requires up-front design to prevent them becoming unmanageable monsters prey to ad-hoc growth. 
 
-
+<a name="design"><a/>
 #Problems with Table Design <a name="Problems_with_Table_Design"></a>
 
 
