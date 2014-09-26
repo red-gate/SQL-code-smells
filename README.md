@@ -5,7 +5,7 @@ SQL code smells
 
 #Contents
 
-- [Introduction](Introduction)
+- <a href="#intro">(Introduction)</a>
 - [Problems with Database](Problems_With_Database_Design)
 - [Problems with Table Design](Problems_with_Table_Design)
 - [Problems with Data Types](Problems_with_Data_Types)
@@ -16,7 +16,7 @@ SQL code smells
 - [Security Loopholes](Security_Loopholes)
 - [Acknowledgements](Acknowledgements)
 
-[Introduction][]
+<a name="intro">
 #Introduction 
 **Once you’ve done a number of SQL code-reviews, you’ll be able to identify signs in the code that indicate all might not be well. These ‘code smells’ are coding styles that, while not bugs, suggest design problems with the code.**
 
