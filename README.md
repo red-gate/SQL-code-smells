@@ -11,10 +11,10 @@ SQL code smells
 - <a href="#datatypes">Problems_with_Data_Types</a>
 - <a href="#expressions">Problems_with_Expressions</a>
 - <a href="#syntax">Difficulties_with_Query_Syntax</a>
-- [Problems with Naming](Problems_with_Naming)
-- [Problems with Routines](Problems_with_Routines)
-- [Security Loopholes](Security_Loopholes)
-- [Acknowledgements](Acknowledgements)
+- <a href="#naming">Problems_with_Naming</a>
+- <a href="#routines">Problems_with_Routines</a>
+- <a href="#loopholes">Security_Loopholes</a>
+- <a href="#people">Acknowledgements</a>
 
 <a name="intro"></a>
 #Introduction 
@@ -366,10 +366,258 @@ See: [SR0001: Avoid SELECT * in a batch, stored procedures, views, and table-val
 <a name="syntax"></a>
 #Difficulties with Query Syntax
 
-##39)
+##39)Creating UberQueries (God-like Queries)
+Always avoid overweight queries (e.g., a single query
+with four inner joins, eight left joins, four derived tables,
+ten subqueries, eight clustered GUIDs, two UDFs and
+six case statements).
 
 
-#Problems with Naming <a name="Problems_with_Naming"></a>
+##40) Nesting views as if they were Russian dolls
+Views are important for abstracting the base tables.
+However, they do not lend themselves to being deeply
+nested. Views that reference views that reference views
+that reference views perform poorly and are difficult
+to maintain. Recommendations vary but I suggest that
+views relate directly to base tables where possible.
+
+
+##41) Joins between large views
+Views are like tables in their behaviour, but they can’t be
+indexed to support joins. When large views participate
+in joins, you never get good performance. Instead, either
+create a view that joins the appropriately indexed base
+tables, or create indexed temporary tables to contain the
+filtered rows from the views you wish to ‘join’.
+
+##42) Using the old Sybase JOIN syntax
+The deprecated syntax (which includes defining the join
+condition in the WHERE clause) is not standard SQL
+and is more difficult to inspect and maintain. Parts of
+this syntax are completely unsupported in SQL Server
+2012 or higher.
+See [SR0010: Avoid using deprecated syntax when you join tables or views](http://msdn.microsoft.com/en-us/library/dd172122(v=vs.100).aspx)
+
+##43)Using correlated subqueries instead of a JOIN
+Correlated subqueries, queries that run against each
+row returned by the main query, sometimes seem
+an intuitive approach, but they are merely disguised
+cursors needed only in exceptional circumstances.
+Window functions will usually perform the same
+operations much faster. Most usages of correlated
+subqueries are accidental and can be replaced with a
+much simpler and faster JOIN query.
+
+##44) Using SELECT rather than SET to assign values to variables
+Using a SELECT statement to assign variable values is
+not ANSI standard SQL and can result in unexpected
+results. If you try to assign the result from a single query
+to a scalar variable, and the query produces several rows,
+a SELECT statement will return no errors, whereas a
+SET statement will. On the other hand, if the query
+returns no rows, the SET statement will assign a NULL
+to the variable, whereas SELECT will leave the current
+value of the variable intact.
+
+
+##45) Using scalar user-defined functions (UDFs) for data lookups as a poor man’s join.
+It is true that SQL Server provides a number of system
+functions to simplify joins when accessing metadata,
+but these are heavily optimized. Using user-defined
+functions in the same way will lead to very slow queries
+since they perform much like correlated subqueries.
+
+
+##46) Not using two-part object names for object references
+The compiler can interpret a two-part object name
+quicker than just one name. This applies particularly to
+tables, views, procedures and functions. The same name
+can be used in different schemas, so it pays to make your
+queries unambiguous.
+
+##47) Using INSERT INTO without specifying the columns and their order
+Not specifying column names is fine for interactive
+work, but if you write code that relies on the hope that
+nothing will ever change, then refactoring could prove
+to be impossible. It is much better to trigger an error
+now than to risk corrupted results after the SQL code
+has changed.
+
+##48) Using full outer joins unnecessarily.
+It is rare to require both matched and unmatched rows
+from the two joined tables, especially if you filter out
+the unmatched rows in the WHERE clause. If what you
+really need is an inner join, left outer join or right outer
+join, then use one of those. If you want all rows from
+both tables, use a cross join.
+
+##49) Including complex conditionals in the WHERE clause
+It is tempting to produce queries in routines that have
+complex conditionals in the WHERE clause where
+variables are used for filtering rows. Usually this is done
+so that a range of filtering conditions can be passed
+as parameters to a stored procedure or tale-valued
+function.
+
+
+
+If a variable is set to NULL instead of a search term, the
+OR logic or a COALESCE disables the condition. If this
+is used in a routine, very different queries are performed
+according to the combination of parameters used or set
+to null. As a result, the query optimizer must use table
+scans, and you end up with slow-running queries that
+are hard to understand or refactor. This is a variety of
+UberQuery which is usually found when some complex
+processing is required to achieve the final result from
+the filtered rows.
+
+##50) Mixing data types in joins or WHERE clauses
+If you compare or join columns that have different data
+types, you rely on implicit conversions, which result in
+poor execution plans that use table scans. This approach
+can also lead to errors because no constraints are in
+place to ensure the data is
+the correct type.
+
+##51) Assuming that SELECT statements all have roughly the same execution time
+Few programmers admit to this superstition, but it
+is apparent by the strong preference for hugely long
+SELECT statements (sometimes called UberQueries).
+A simple SELECT statement runs in just a few
+milliseconds. A process runs faster if the individual SQL
+queries are clear enough to be easily processed by the
+query optimizer. Otherwise, you will get a poor query
+plan that performs slowly and won’t scale.
+
+##52) Not handling NULL values in nullable columns
+Generally, it is wise to explicitly handle NULLs in
+nullable columns, by using COALESCE or ISNULL to
+provide a default value. This is especially true when
+calculating or concatenating the results. (A NULL
+in part of a concatenated string, for example, will
+propagate to the entire string. Names and addresses are
+prone to this sort of error.)
+
+See: [SR0007: Use ISNULL(column, default_value) on nullable columns in expressions](http://msdn.microsoft.com/en-us/library/dd193267(v=vs.100).aspx)
+
+##53) Referencing an unindexed column within the IN predicate of a WHERE clause
+A WHERE clause that references an unindexed column
+in the IN predicate causes a table scan and is therefore
+likely to run far more slowly than necessary.
+See [SR0004: Avoid using columns that do not have indexes as test expressions in IN predicates](http://msdn.microsoft.com/en-us/library/dd193249(v=vs.100).aspx)
+
+##54) Using LIKE in a WHERE clause with an initial wildcard character
+An index cannot be used to find matches that start with
+a wildcard character (‘%’ or ‘_’ ), so queries are unlikely
+to run well on large tables because they’ll require table
+scans.
+
+See [See: SR0005: Avoid using patterns that start with “%” in LIKE predicates](http://msdn.microsoft.com/en-us/library/dd193273(v=vs.100).aspx)
+
+
+##55) Using a predicate or join column as a parameter for a user-defined function
+The query optimizer will not be able to generate a
+reasonable query plan if the columns in a predicate or
+join are included as function parameters. The optimizer
+needs to be able to make a reasonable estimate of the
+number of rows in an operation in order to effectively
+run a SQL statement and cannot do so when functions
+are used on predicate or join columns.
+
+
+##56) Supplying object names without specifying the schema
+Object names need only to be unique within a schema.
+However, when referencing an object in a SELECT,
+UPDATE, DELETE, MERGE or EXECUTE statement -
+or when calling the OBJECT_ID function - the database
+engine can find the objects more easily if the names are
+qualified with the schema name.
+
+
+##57) Using ‘= NULL’ or ‘<> NULL’ to filter a nullable column for NULLs
+An expression that returns a NULL as either the left
+value (Lvalue) or right value (Rvalue) will always evaluate
+to NULL. Use IS NULL or IS NOT NULL.
+
+
+##58) Not using NOCOUNT ON in stored procedures and triggers
+Unless you need to return messages that give you
+the row count of each statement, you should specify
+the NOCOUNT ON option to explicitly turn off this
+feature. This option is not likely to be a significant
+performance factor one way or the other.
+
+
+##59) Using the NOT IN predicate in the WHERE clause
+Your queries will often perform poorly if your WHERE
+clause includes a NOT IN predicate that references a
+subquery. The optimizer will likely have to use a table
+scan instead of an index seek, even if there is a suitable
+index. You can almost always get a better-performing
+query by using a left outer join and checking for a NULL
+in a suitable NOT NULLable column on the right-hand
+side.
+
+##60) Defining foreign keys without a supporting index
+Unlike some relational database management systems
+(RDBMSs), SQL Server does not automatically index a
+foreign key column, even though an index will likely be
+needed. It is left to the implementers of the RDBMS as
+to whether an index is automatically created to support
+a foreign key constraint. SQL Server chooses not to do
+so, probably because, if the referenced table is a lookup
+table with just a few values, an index isn’t useful. SQL
+Server also does not mandate a NOT NULL constraint
+on the foreign key, perhaps to allow rows that aren’t
+related to the referenced table.
+
+
+
+Even if you’re not joining the two tables via the primary
+and foreign keys, with a table of any size, an index
+is usually necessary to check changes to PRIMARY
+KEY constraints against referencing FOREIGN KEY
+constraints in other tables to verify that changes to the
+primary key are reflected in the foreign key
+
+##61)Using a non-SARGable (Search ARGument..able) expression in a WHERE clause
+In the WHERE clause of a query it is good to avoid
+having a column reference or variable embedded within
+an expression, or used as a parameter of a function.
+A column reference or variable is best used as a single
+element on one side of the comparison operator,
+otherwise it will most probably trigger a table scan,
+which is expensive in a table of any size.
+
+See [SR0006: Move a column reference to one side of a comparison operator to use a column index](http://msdn.microsoft.com/en-us/library/dd193264(v=vs.100).aspx)
+
+##62) Including a deterministic function in a WHERE clause
+If the value of the function does not depend on the data
+row that you wish to select, then it is better to put its
+value in a variable before the SELECT query and use the
+variable instead.
+
+See: [SR0015: Extract deterministic function calls from WHERE predicates](http://msdn.microsoft.com/en-us/library/dd193285(v=vs.100).aspx)
+
+##63) Using SELECT DISTINCT to mask a join problem
+It is tempting to use SELECT DISTINCT to eliminate
+duplicate rows in a join. However, it’s much better to
+determine why rows are being duplicated and fix the
+problem.
+
+
+##64) Using NOT IN with an expression that allows null values
+If you are using a NOT IN predicate to select only those
+rows that match the results returned by a subquery
+or expression, make sure there are no NULL values in
+those results. Otherwise, your outer query won’t return
+the results you expect. In the case of both IN and NOT
+IN, it is better to use an appropriate outer join.
+
+
+<a name="naming"></a>
+#Problems with Naming 
 
 ##65) Excessively long or short identifiers
 Identifiers should help to make SQL readable as
@@ -422,8 +670,8 @@ If object names are valid and not reserved words, there is no need to use square
 ##72) Using system-generated object names, particularly for constraints
 This tends to happen with primary keys and foreign keys if, in the data definition language (DDL), you don’t supply the constraint name. Auto-generated names are difficult to type and easily confused, and they tend to confuse SQL comparison tools. When installing SharePoint via the GUI, the database names get GUID suffixes, making them very difficult to deal with.
 
-
-#Problems with Routines <a name="Problems_with_Routines"></a>
+<a name="routines"></a>
+#Problems with Routines 
 
 ##73) Including few or no comments
 Being antisocial is no excuse. Neither is being in a hurry. Your scripts should be filled with relevant comments, 30% at a minimum. This is not just to help your colleagues, but also to help you in the future. What seems obvious today will be as clear as mud tomorrow, unless you comment your code properly. In a routine, comments should include intro text in the header as well as examples of usage.
@@ -704,7 +952,8 @@ Don’t mix data manipulation language (DML) statements with data definition lan
 ##114) Using meaningless aliases for tables (e.g., a, b, c, d, e)
 Aliases aren’t actually meant to cut down on the typing but rather to make your code clearer. To use single characters is antisocial.
 
-#Security Loopholes <a name="Security_Loopholes"></a>
+<a name="loopholes"></a>
+#Security Loopholes 
 
 ##115) Using SQL Server logins, especially without password expirations or Windows password policy  
 Sometimes you must use SQL Server logins. For example, with Microsoft Azure SQL Database, you have no other option, but it isn’t satisfactory. SQL Server logins and passwords have to be sent across the network and can be read by sniffers. They also require passwords to be stored on client machines and in connection strings. SQL logins are particularly vulnerable to bruteforce attacks. They are also less convenient because the SQL Server Management Studio (SSMS) registered servers don’t store password information and so can’t be used for executing SQL across a range of servers. Windows-based authentication is far more robust and should be used where possible.
@@ -722,8 +971,8 @@ Because of ownership chaining and SQL injection risks, dynamic SQL requires cons
 SQL injection can be used not only from an application  but also by a user who lacks, but wants, the permissions  necessary to perform a particular role, or who simply  wants to access sensitive data. If dynamic SQL is  executed within a stored procedure, under the temporary EXECUTE AS permission of a user with sufficient privileges to create users, it can be accessed  by a malicious user. Suitable precautions must be taken  to make this impossible. These precautions start with  giving EXECUTE AS permissions only to WITHOUT  LOGIN users with least-necessary permissions, and using sp_ExecuteSQL with parameters rather than EXECUTE.
 
 
-
-#Acknowledgements <a name="Acknowledgements"></a>
+<a name="people"></a>
+#Acknowledgements 
 ####For a booklet like this, it is best to go with the established opinion of what constitutes a SQL Code Smell. There is little room for creativity. In order to identify only those SQL coding habits that could, in some circumstances, lead to problems, I must rely on the help of experts, and I am very grateful for the help, support and writings of the following people in particular. 
 * Dave Howard
 * Merrill Aldrich
