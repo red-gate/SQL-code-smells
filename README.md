@@ -70,5 +70,51 @@ In designing a database application, there is sometimes functionality that canno
 #Difficulties with Query Syntax <a name="Difficulties_with_Query_Syntax"></a>
 #Problems with Naming <a name="Problems_with_Naming"></a>
 #Problems with Routines <a name="Problems_with_Routines"></a>
+
+
 #Security Loopholes <a name="Security_Loopholes"></a>
+
+##115) Using SQL Server logins, especially without password expirations or Windows password policy  
+Sometimes you must use SQL Server logins. For example, with Microsoft Azure SQL Database, you have no other option, but it isn’t satisfactory. SQL Server logins and passwords have to be sent across the network and can be read by sniffers. They also require passwords to be stored on client machines and in connection strings. SQL logins are particularly vulnerable to bruteforce attacks. They are also less convenient because the SQL Server Management Studio (SSMS) registered servers don’t store password information and so can’t be used for executing SQL across a range of servers. Windows-based authentication is far more robust and should be used where possible.
+
+##116) Using the xp_cmdshell system stored procedure Use xp_cmdshell in a routine only as a last resort, due to the elevated security permissions they require and consequential security risk. The xp_cmdshell procedure is best reserved for scheduled jobs where security can be better managed.
+
+##117) Authentication set to Mixed Mode
+Ensure that Windows Authentication Mode is used wherever possible. SQL Server authentication is necessary only when a server is remote or outside the domain, or if third-party software requires SQL authentication for remote maintenance. Windows Authentication is less vulnerable and avoids having to transmit passwords over the network or store them in connection strings.
+
+##118) Using dynamic SQL without the EXECUTE AS clause 
+Because of ownership chaining and SQL injection risks, dynamic SQL requires constant vigilance to ensure that  it is used only as intended. Use the EXECUTE AS clause to ensure the dynamic SQL code inside the procedure is  executed only in the context you expect.
+
+##119) Using dynamic SQL with the possibility of SQL injection 
+SQL injection can be used not only from an application  but also by a user who lacks, but wants, the permissions  necessary to perform a particular role, or who simply  wants to access sensitive data. If dynamic SQL is  executed within a stored procedure, under the temporary EXECUTE AS permission of a user with sufficient privileges to create users, it can be accessed  by a malicious user. Suitable precautions must be taken  to make this impossible. These precautions start with  giving EXECUTE AS permissions only to WITHOUT  LOGIN users with least-necessary permissions, and using sp_ExecuteSQL with parameters rather than EXECUTE.
+
+
+
 #Acknowledgements <a name="Acknowledgements"></a>
+###For a booklet like this, it is best to go with the established opinion of what constitutes a SQL Code Smell. There is little room for creativity. In order to identify only those SQL coding habits that could, in some circumstances, lead to problems, I must rely on the help of experts, and I am very grateful for the help, support and writings of the following people in particular. 
+Dave Howard
+Merrill Aldrich
+Plamen Ratchev
+Dave Levy
+Mike Reigler
+Anil Das
+Adrian Hills
+Sam Stange
+Ian Stirk
+Aaron Bertrand
+Neil Hambly
+Matt Whitfield
+Nick Harrison
+Bill Fellows
+Jeremiah Peschka
+Diane McNurlan
+Robert L Davis
+Dave Ballantyne
+John Stafford
+Gail Shaw
+Alex Kusnetsov
+Jeff Moden
+Joe Celko
+Robert Young
+
+And special thanks to our technical referees, Grant Fritchey and Jonathan Allen.
