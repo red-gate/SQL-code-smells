@@ -16,7 +16,7 @@ SQL code smells
 - [Security Loopholes](Security_Loopholes)
 - [Acknowledgements](Acknowledgements)
 
-<a name="Introduction"></a>
+(Introduction)
 #Introduction 
 **Once you’ve done a number of SQL code-reviews, you’ll be able to identify signs in the code that indicate all might not be well. These ‘code smells’ are coding styles that, while not bugs, suggest design problems with the code.**
 
@@ -65,6 +65,9 @@ In designing a database application, there is sometimes functionality that canno
 
 
 #Problems with Table Design <a name="Problems_with_Table_Design"></a>
+
+
+
 #Problems with Data Types <a name="Problems_with_Data_Types"></a>
 #Problems with Expressions <a name="Problems_with_Expressions"></a>
 #Difficulties with Query Syntax <a name="Difficulties_with_Query_Syntax"></a>
