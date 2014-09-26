@@ -7,8 +7,8 @@ SQL code smells
 
 - <a href="#intro">Introduction</a>
 - <a href="#design">Problems_With_Database_Design</a>
-- <a href="#datatypes">Problems_with_Table_Design</a>
-- [Problems with Data Types](Problems_with_Data_Types)
+- <a href="#tabledesign">Problems_with_Table_Design</a>
+- <a href="#datatype">Problems_with_Data_Types</a>
 - [Problems with Expressions](Problems_with_Expressions)
 - [Difficulties with Query Syntax](Difficulties_with_Query_Syntax)
 - [Problems with Naming](Problems_with_Naming)
@@ -16,7 +16,7 @@ SQL code smells
 - [Security Loopholes](Security_Loopholes)
 - [Acknowledgements](Acknowledgements)
 
-<a name="intro">
+<a name="intro"></a>
 #Introduction 
 **Once you’ve done a number of SQL code-reviews, you’ll be able to identify signs in the code that indicate all might not be well. These ‘code smells’ are coding styles that, while not bugs, suggest design problems with the code.**
 
@@ -31,8 +31,9 @@ One can be a bit defensive about SQL code smells. I will cheerfully write very l
 In describing all these 119 code-smells in a booklet, I’ve been very constrained on space to describe each code smell. Some code smells would require a whole article to explain them properly. Fortunately, SQL Server Central and Simple-Talk have, between them, published material on almost all these code smells, so if you get interested, please explore these essential archives of information.
 
 	-*Phil Factor, _Contributing Editor_*
-
-#Problems with Database Design <a name="Problems_With_Database_Design"></a>
+	
+<a name="design"></a>
+#Problems with Database Design 
 ##1) Packing lists, complex data, or other multivariate attributes into a table column
 
 It is permissible to put a list or data document in a column only if it is, from the database perspective, ‘atomic’, that is, never likely to be shredded into individual values; in other words, as long as the value remains in the format in which it started. We store strings, after all, and a string is hardly atomic since it consists of an ordinally significant collection of characters or words. A list or XML value stored in a column, whether by character map, bitmap or XML data type, can be a useful temporary expedient during development, but the column will likely need to be normalized if values will have to be shredded.
@@ -63,7 +64,7 @@ Quite often, the database designer will need to create an interface to provide a
 ##7) Using command-line and OLE automation to access server-based resources 
 In designing a database application, there is sometimes functionality that cannot be done purely in SQL, usually when other server-based, or network-based resources must be accessed. Now that SQL Server’s integration with PowerShell is so much more mature, it is better to use that, rather than ```xp_cmdshell or sp_OACreate``` (or similar), to access the file system or other server-based resources. This needs some thought and planning. You should also use SQL Agent jobs when possible to schedule your server-related tasks. This requires up-front design to prevent them becoming unmanageable monsters prey to ad-hoc growth. 
 
-<a name="design"><a/>
+<a name="tabledesign"><a/>
 #Problems with Table Design <a name="Problems_with_Table_Design"></a>
 
 ##8) Using constraints to restrict values in a column
