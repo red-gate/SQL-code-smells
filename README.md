@@ -396,29 +396,29 @@ SQL injection can be used not only from an application  but also by a user who l
 
 #Acknowledgements <a name="Acknowledgements"></a>
 ###For a booklet like this, it is best to go with the established opinion of what constitutes a SQL Code Smell. There is little room for creativity. In order to identify only those SQL coding habits that could, in some circumstances, lead to problems, I must rely on the help of experts, and I am very grateful for the help, support and writings of the following people in particular. 
-Dave Howard
-Merrill Aldrich
-Plamen Ratchev
-Dave Levy
-Mike Reigler
-Anil Das
-Adrian Hills
-Sam Stange
-Ian Stirk
-Aaron Bertrand
-Neil Hambly
-Matt Whitfield
-Nick Harrison
-Bill Fellows
-Jeremiah Peschka
-Diane McNurlan
-Robert L Davis
-Dave Ballantyne
-John Stafford
-Gail Shaw
-Alex Kusnetsov
-Jeff Moden
-Joe Celko
-Robert Young
+* Dave Howard
+* Merrill Aldrich
+* Plamen Ratchev
+* Dave Levy
+* Mike Reigler
+* Anil Das
+* Adrian Hills
+* Sam Stange
+* Ian Stirk
+* Aaron Bertrand
+* Neil Hambly
+* Matt Whitfield
+* Nick Harrison
+* Bill Fellows
+* Jeremiah Peschka
+* Diane McNurlan
+* Robert L Davis
+* Dave Ballantyne
+* John Stafford
+* Gail Shaw
+* Alex Kusnetsov
+* Jeff Moden
+* Joe Celko
+* Robert Young
 
 And special thanks to our technical referees, Grant Fritchey and Jonathan Allen.
