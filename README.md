@@ -69,44 +69,72 @@ In designing a database application, there is sometimes functionality that canno
 #Problems with Expressions <a name="Problems_with_Expressions"></a>
 #Difficulties with Query Syntax <a name="Difficulties_with_Query_Syntax"></a>
 #Problems with Naming <a name="Problems_with_Naming"></a>
+
+##65) Excessively long or short identifiers
+Identifiers should help to make SQL readable as
+if it were English. Short names like t1 or gh might
+make typing easier but can cause errors and don’t
+help teamwork. At the same time, names should be
+names and not long explanations. Long names can
+be frustrating to the person using SQL interactively,
+unless that person is using SQL Prompt or some other
+IntelliSense system, though you can’t rely on it.
+
+##66) Using ```sp_ prefixes``` for stored procedures
+The ```sp_ prefix``` has a special meaning in SQL Server and
+doesn’t mean ‘stored procedure’ but ‘special’, which tells
+the database engine to first search the master database
+for the object.
+
+
+##67) ‘Tibbling’ SQL Server objects with Reverse-Hungarian prefixes such as ```tbl_```, ```vw_, pk_```, ```fn_```, and ```usp```
+SQL names don’t need prefixes because there isn’t any ambiguity about what they refer to. ‘Tibbling’ is a habit that came from databases imported from Microsoft Access.
+
+##68)Using reserved words in names
+Using reserved words makes code more difficult to read,
+can cause problems to code formatters, and can cause
+errors when writing code.
+See: [SR0012: Avoid using reserved words for type names] (http://msdn.microsoft.com/en-us/library/dd193421(v=vs.100).aspx)
+
+##69)Including special characters in object names
+SQL Server supports special character in object names
+for backward compatibility with older databases such
+as Microsoft Access, but using these characters in newly
+created databases causes more problems than they’re
+worth. Special characters require brackets (or double
+quotations) around the object name, make code difficult
+to read, and make the object more difficult to reference.
+Avoid particularly using any whitespace characters,
+square brackets or either double or single quotation
+marks as part of the object name.
+
+See: [SR0011: Avoid using special characters in object names] (http://msdn.microsoft.com/en-us/library/dd172134(v=vs.100).aspx)
+
+##70) Using numbers in table names
+It should always serve as a warning to see tables named Year1, Year2, Year3 or so on, or even worse, automatically generated names such as tbl3546 or 567Accounts. If the name of the table doesn’t describe the entity, there is a design problem.
+
+See: [SR0011: Avoid using special characters in object names](http://msdn.microsoft.com/en-us/library/dd172134(v=vs.100).aspx)
+
+##71)Using square brackets unnecessarily for object names
+If object names are valid and not reserved words, there is no need to use square brackets. Using invalid characters in object names is a code smell anyway, so there is little point in using them. If you can’t avoid brackets, use them only for invalid names.
+
+##72) Using system-generated object names, particularly for constraints
+This tends to happen with primary keys and foreign keys if, in the data definition language (DDL), you don’t supply the constraint name. Auto-generated names are difficult to type and easily confused, and they tend to confuse SQL comparison tools. When installing SharePoint via the GUI, the database names get GUID suffixes, making them very difficult to deal with.
+
+
 #Problems with Routines <a name="Problems_with_Routines"></a>
 
 ##73) Including few or no comments
-Being antisocial is no excuse. Neither is being in a hurry.
-Your scripts should be filled with relevant comments,
-30% at a minimum. This is not just to help your
-colleagues, but also to help you in the future. What
-seems obvious today will be as clear as mud tomorrow,
-unless you comment your code properly. In a routine,
-comments should include intro text in the header as
-well as examples of usage.
+Being antisocial is no excuse. Neither is being in a hurry. Your scripts should be filled with relevant comments, 30% at a minimum. This is not just to help your colleagues, but also to help you in the future. What seems obvious today will be as clear as mud tomorrow, unless you comment your code properly. In a routine, comments should include intro text in the header as well as examples of usage.
 
 ##74) Excessively ‘overloading’ routines
-Stored procedures and functions are compiled with
-query plans. If your routine includes multiple queries
-and you use a parameter to determine which query
-to run, the query optimizer cannot come up with an
-efficient execution plan. Instead, break the code into a
-series of procedures with one ‘wrapper’ procedure that
-determines which of the others to run.
+Stored procedures and functions are compiled with query plans. If your routine includes multiple queries and you use a parameter to determine which query to run, the query optimizer cannot come up with an efficient execution plan. Instead, break the code into a series of procedures with one ‘wrapper’ procedure that determines which of the others to run.
 
 ##75) Creating routines (especially stored procedures) as ‘God Routines’ or ‘UberProcs’
-Occasionally, long routines provide the most efficient
-way to execute a process, but occasionally they just grow
-like algae as functionality is added. They are difficult
-to maintain and likely to be slow. Beware particularly
-of those with several exit points and different types of
-result set.
+Occasionally, long routines provide the most efficient way to execute a process, but occasionally they just grow like algae as functionality is added. They are difficult to maintain and likely to be slow. Beware particularly of those with several exit points and different types of result set.
 
 ##76) Creating stored procedures that return more than one result set
-Although applications can use stored procedures
-that return multiple result sets, the results cannot be
-accessed within SQL. Although they can be used by
-the application via ODBC, the order of tables will be
-significant and changing the order of the result sets in a
-refactoring will then break the application in ways that
-may not even cause an error, and will be difficult to test
-automatically from within SQL.
+Although applications can use stored procedures that return multiple result sets, the results cannot be accessed within SQL. Although they can be used by the application via ODBC, the order of tables will be significant and changing the order of the result sets in a refactoring will then break the application in ways that may not even cause an error, and will be difficult to test automatically from within SQL.
 
 ##77) Too many parameters in stored procedures or functions
 The general consensus is that a lot of parameters can
@@ -201,7 +229,7 @@ propagation of NULL values. Good defensive coding
 requires that you initialize the output parameters to a
 default value at the start of the procedure body.
 
-See '[SR0013: Output parameter (parameter) is not populated in all code paths'] (http://msdn.microsoft.com/en-us/library/dd172136(v=vs.100).aspx)
+See '[SR0013: Output parameter (parameter) is not populated in all code paths]' (http://msdn.microsoft.com/en-us/library/dd172136(v=vs.100).aspx)
 
 ##87) Specifying parameters by order rather than assignment, where there are more than four parameters
 When calling a stored procedure, it is generally better
@@ -214,7 +242,7 @@ there are less than a handful of parameters. Also,
 natively compiled procedures work fastest by passing in
 parameters by order.
 
-##88) Setting the QUOTED_IDENTIFIER or ANSI_NULLS options inside stored procedures
+##88) Setting the ```QUOTED_IDENTIFIER or ANSI_NULLS``` options inside stored procedures
 Stored procedures use the SET settings specified
 at execute time, except for SET ANSI_NULLS and
 SET QUOTED_IDENTIFIER. Stored procedures
@@ -223,7 +251,7 @@ QUOTED_IDENTIFIER use the setting specified at
 stored procedure creation time. If used inside a stored
 procedure, any such SET command is ignored.
 
-##89) Creating a routine with ANSI_NULLS or QUOTED_IDENTIFIER options set to OFF.
+##89) Creating a routine with ```ANSI_NULLS or QUOTED_IDENTIFIER``` options set to OFF.
 At the time the routine is created (parse time), both
 options should normally be set to ON. They are ignored
 on execution. The reason for keeping Quoted Identifiers
