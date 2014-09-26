@@ -72,6 +72,21 @@ In designing a database application, there is sometimes functionality that canno
 #Problems with Routines <a name="Problems_with_Routines"></a>
 
 
+##112) Using the NULLIF expression
+The NULLIF expression compares two expressions
+and returns the first one if the two are not equal. If the
+expressions are equal then NULLIF returns a NULL
+value of the data type of the first expression. NULLIF is
+syntactic sugar. Use the CASE statement instead so that
+ordinary folks can understand what you’re trying to do.
+The two are treated identically.
+
+##113) Not putting all the DDL statements at the beginning of the batch
+Don’t mix data manipulation language (DML) statements with data definition language (DDL) statements. Instead, put all the DDL statements at the beginning of your procedures or batches.
+
+##114) Using meaningless aliases for tables (e.g., a, b, c, d, e)
+Aliases aren’t actually meant to cut down on the typing but rather to make your code clearer. To use single characters is antisocial.
+
 #Security Loopholes <a name="Security_Loopholes"></a>
 
 ##115) Using SQL Server logins, especially without password expirations or Windows password policy  
