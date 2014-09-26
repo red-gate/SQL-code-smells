@@ -5,21 +5,19 @@ SQL code smells
 
 #Contents
 
-- Introduction
-- Problems with Database
-- Design
-- Problems with Table
-- Design
-- Problems with Data Types
-- Problems with Expressions
-- Difficulties with Query
-- Syntax
-- Problems with Naming
-- Problems with Routines
-- Security Loopholes
-- Acknowledgements
+- [Introduction](Introduction)
+- [Problems with Database](Problems_With_Database_Design)
+- [Problems with Table Design](Problems_with_Table_Design)
+- [Problems with Data Types](Problems_with_Data_Types)
+- [Problems with Expressions](Problems_with_Expressions)
+- [Difficulties with Query Syntax](Difficulties_with_Query_Syntax)
+- [Problems with Naming](Problems_with_Naming)
+- [Problems with Routines](Problems_with_Routines)
+- [Security Loopholes](Security_Loopholes)
+- [Acknowledgements](Acknowledgements)
 
-#Introduction
+<a name="Introduction"></a>
+#Introduction 
 **Once you’ve done a number of SQL code-reviews, you’ll be able to identify signs in the code that indicate all might not be well. These ‘code smells’ are coding styles that, while not bugs, suggest design problems with the code.**
 
 Kent Beck and Massimo Arnoldi seem to have coined the term ‘CodeSmell’ in the ‘[Once And Only Once](http://www.c2.com/cgi/wiki?OnceAndOnlyOnce)’ page of www.C2.com, where Kent also said that code ‘wants to be simple’. Kent Beck and Martin Fowler expand on the issue of code challenges in their essay ‘Bad Smells in Code’, published as Chapter 3 of the book ‘Refactoring: Improving the Design of Existing Code’ (ISBN 978-0201485677).
@@ -34,15 +32,43 @@ In describing all these 119 code-smells in a booklet, I’ve been very constrain
 
 	-*Phil Factor, _Contributing Editor_*
 
-#Problems with Database
-#Design
-#Problems with Table
-#Design
-#Problems with Data Types
-#Problems with Expressions
-#Difficulties with Query
-#Syntax
-#Problems with Naming
-#Problems with Routines
-#Security Loopholes
-#Acknowledgements
+#Problems with Database Design <a name="Problems_With_Database_Design"></a>
+##1) Packing lists, complex data, or other multivariate attributes into a table column
+
+It is permissible to put a list or data document in a column only if it is, from the database perspective, ‘atomic’, that is, never likely to be shredded into individual values; in other words, as long as the value remains in the format in which it started. We store strings, after all, and a string is hardly atomic since it consists of an ordinally significant collection of characters or words. A list or XML value stored in a column, whether by character map, bitmap or XML data type, can be a useful temporary expedient during development, but the column will likely need to be normalized if values will have to be shredded.
+
+A related code smell is:
+
+###Using inappropriate data types
+Although a business may choose to represent a date as a single string of numbers or require codes that mix text with numbers, it is unsatisfactory to store such data in columns that don’t match the actual data type. This confuses the presentation of data with its storage. Dates, money, codes and other business data can be represented in a human-readable form, the ‘presentation’ mode, they can be represented in their storage form, or in their data-interchange form. 
+
+Storing data in the wrong form as strings leads to major issues with coding, indexing, sorting, and other operations. Put the data into the appropriate ‘storage’ data type at all times.
+
+##2) Storing the hierarchy structure in the same table as the entities that make up the hierarchy
+Self-referencing tables seem like an elegant way to represent hierarchies. However, such an approach
+mixes relationships and values. Real-life hierarchies need more than a parent-child relationship. The ‘Closure Table’ pattern, where the relationships are held in a table separate from the data, is much more suitable for real-life hierarchies. Also, in real life, relationships tend have a beginning and an end, and this often needs to be recorded. The HIERARCHYID data type and the common language runtime (CLR) SqlHierarchyId class are provided to make tree structures represented by self-referencing tables more efficient, but they are likely to be appropriate for only a minority of applications.
+
+##3) Using an Entity Attribute Value (EAV) model
+The use of an EAV model is almost never justified and leads to very tortuous SQL code that is extraordinarily difficult to apply any sort of constraint to. When faced with providing a ‘persistence layer’ for an application that doesn’t understand the nature of the data, use XML instead. That way, you can use XSD to enforce data constraints, create indexes on the data, and use XPath to query specific elements within the XML. It is then, at least, a reliable database, even though it isn’t relational!
+
+##4) Using a polymorphic association
+Sometimes, one sees table designs which have ‘keys’ that can reference more than one table, whose identity is usually denoted by a separate column. This is where an entity can relate to one of a number of different entities according to the value in another column that provides the identity of the entity. This sort of relationship cannot be subject to foreign key constraints, and any joins are difficult for the query optimizer to provide good plans for. Also, the logic for the joins is likely to get complicated. Instead, use an intersection table, or if you are attempting an object-oriented mapping, look at the method by which SQL Server represents the database metadata by creating an ‘object’ supertype class that all of the individual object types extend. Both these devices give you the flexibility of design that polymorphic associations attempt.
+
+##5) Creating tables as ‘God Objects’
+‘God Tables’ are usually the result of an attempt to encapsulate a large part of the data for the business domain in a single wide table. This is usually a normalization error, or rather, a rash and over-ambitious attempt to ‘denormalize’ the database structure. If you have a table with many columns, it is likely that you have come to grief on the third normal form. It could also be the result of believing, wrongly, that all joins come at great and constant cost. Normally they can be replaced by views or table-valued functions. Indexed views can have maintenance overhead but are greatly superior to denormalization. 
+
+##6) Contrived interfaces
+Quite often, the database designer will need to create an interface to provide an abstraction layer between schemas within a database, between database and ETL processes, or between a database and application. You face a choice between uniformity, and simplicity. Overly complicated interfaces, for whatever reason, should never be used where a simpler design would suffice. It is always best to choose simplicity over conformity. Interfaces have to be clearly documented and maintained, let alone understood.
+
+##7) Using command-line and OLE automation to access server-based resources 
+In designing a database application, there is sometimes functionality that cannot be done purely in SQL, usually when other server-based, or network-based resources must be accessed. Now that SQL Server’s integration with PowerShell is so much more mature, it is better to use that, rather than xp_cmdshell or sp_OACreate (or similar), to access the file system or other server-based resources. This needs some thought and planning. You should also use SQL Agent jobs when possible to schedule your server-related tasks. This requires up-front design to prevent them becoming unmanageable monsters prey to ad-hoc growth. 
+
+
+#Problems with Table Design <a name="Problems_with_Table_Design"></a>
+#Problems with Data Types <a name="Problems_with_Data_Types"></a>
+#Problems with Expressions <a name="Problems_with_Expressions"></a>
+#Difficulties with Query Syntax <a name="Difficulties_with_Query_Syntax"></a>
+#Problems with Naming <a name="Problems_with_Naming"></a>
+#Problems with Routines <a name="Problems_with_Routines"></a>
+#Security Loopholes <a name="Security_Loopholes"></a>
+#Acknowledgements <a name="Acknowledgements"></a>
