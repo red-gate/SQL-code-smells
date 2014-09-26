@@ -10,7 +10,7 @@ SQL code smells
 - <a href="#tabledesign">Problems_with_Table_Design</a>
 - <a href="#datatypes">Problems_with_Data_Types</a>
 - <a href="#expressions">Problems_with_Expressions</a>
-- [Difficulties with Query Syntax](Difficulties_with_Query_Syntax)
+- <a href="#syntax">Difficulties_with_Query_Syntax</a>
 - [Problems with Naming](Problems_with_Naming)
 - [Problems with Routines](Problems_with_Routines)
 - [Security Loopholes](Security_Loopholes)
@@ -274,10 +274,101 @@ characters that can’t be represented by 8-bit ASCII!
 <a name="expressions"></a>
 #Problems with Expressions 
 
-##30) 
+##30) Excessive use of parentheses
+Some developers use parentheses even when they
+aren’t necessary, as a safety net when they’re not sure
+of precedence. This makes the code more difficult to
+maintain and understand.
+
+##31) Using ‘broken’ functions such
+as ‘ISNUMERIC’ without
+additional checks
+Some functions, such as ISNUMERIC, are entirely
+useless and are there only for backward
+compatibility - or possibly as a joke. (Try ```Select isNumeric(‘,’)```, for example.) Use a function that is
+appropriate for the data type whose validity you
+are testing.
+
+##32) Injudicious use of the LTRIM and RTRIM functions
+These don’t work as they do in any other computer
+language. They only trim ASCII space rather than any
+whitespace character. Use a scalar user-defined function
+instead.
+
+##33) Using DATALENGTH rather than LEN to find the length of a string.
+Although using the DATALENGTH function is valid, it
+can easily give you the wrong results if you’re unaware
+of the way it works with the CHAR, NCHAR, or
+NVARCHAR data types.
+
+##34) Not using a semicolon to terminate SQL statements
+Although the lack of semicolons is completely
+forgivable, it helps to understand more complicated
+code if individual statements are terminated. With
+one or two exceptions, such as delimiting the previous
+statement from a CTE, using semicolons is currently
+only a decoration, though it is a good habit to adopt to
+make code more future-proof and portable.
+
+##35) Relying on data being implicitly converted between types
+Implicit conversions can have unexpected results, such
+as truncating data or reducing performance. It is not
+always clear in expressions how differences in data types
+are going to be resolved. If data is implicitly converted
+in a join operation, the database engine is more likely
+to build a poor execution plan. More often than not,
+you should explicitly define your conversions to avoid
+unintentional consequences.
+See: [SR0014: Data loss might occur when casting from {Type1} to {Type2}](http://msdn.microsoft.com/en-us/library/dd193269(v=vs.100).aspx)
 
 
-#Difficulties with Query Syntax <a name="Difficulties_with_Query_Syntax"></a>
+##36) Using the @@IDENTITY system function
+The generation of an IDENTITY value is not
+transactional, so in some circumstances, @@IDENTITY
+returns the wrong value and not the value from the row
+you just inserted. This is especially true when using
+triggers that insert data, depending on when the triggers
+fire. The SCOPE_IDENTITY function is safer because
+it always relates to the current batch (within the same
+scope). Also consider using the IDENT_CURRENT
+function, which returns the last IDENTITY value
+regardless of session or scope. The OUTPUT clause is a
+better and safer way of capturing identity values.
+
+See: [See: SR0008: Consider using SCOPE_IDENTITY instead of @@IDENTITY](http://msdn.microsoft.com/en-us/library/dd172121(v=vs.100).aspx)
+
+##37) Using BETWEEN for DATETIME ranges
+You never get complete accuracy if you specify dates
+when using the BETWEEN logical operator with
+DATETIME values, due to the inclusion of both the
+date and time values in the range. It is better to first
+use a date function such as DATEPART to convert the
+DATETIME value into the necessary granularity (such as
+day, month, year, day of year) and store this in a column
+(or columns), then indexed and used as a filtering or
+grouping value. This can be done by using a persisted
+computed column to store the required date part as an
+integer, or via a trigger.
+
+
+##38) Using SELECT * in a batch
+Although there is a legitimate use in a batch for ```IF EXISTS (SELECT * FROM …) or SELECT count(*),```
+any other use is vulnerable to changes in column names
+or order. SELECT * was designed for interactive use, not
+as part of a batch. Plus, requesting more columns from
+the database than are used by the application results in
+excess database I/O and network traffic, leading to slow
+application response and unhappy users.
+
+See: [SR0001: Avoid SELECT * in a batch, stored procedures, views, and table-valued functions](http://msdn.microsoft.com/en-us/library/dd193296(v=vs.100).aspx)
+
+
+<a name="syntax"></a>
+#Difficulties with Query Syntax
+
+##39)
+
+
 #Problems with Naming <a name="Problems_with_Naming"></a>
 
 ##65) Excessively long or short identifiers
