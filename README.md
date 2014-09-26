@@ -7,7 +7,7 @@ SQL code smells
 
 - <a href="#intro">Introduction</a>
 - <a href="#design">Problems_With_Database_Design</a>
-- [Problems with Table Design](Problems_with_Table_Design)
+- <a href="#datatypes">Problems_with_Table_Design</a>
 - [Problems with Data Types](Problems_with_Data_Types)
 - [Problems with Expressions](Problems_with_Expressions)
 - [Difficulties with Query Syntax](Difficulties_with_Query_Syntax)
@@ -66,9 +66,123 @@ In designing a database application, there is sometimes functionality that canno
 <a name="design"><a/>
 #Problems with Table Design <a name="Problems_with_Table_Design"></a>
 
+##8) Using constraints to restrict values in a column
+You can use a constraint to restrict the values permitted
+in a column, but it is usually better to define the
+values in a separate ‘lookup’ table and enforce the data
+restrictions with a foreign key constraint. This makes
+it much easier to maintain and will also avoid a
+code change every time a new value is added to the
+permitted range, as is the case with constraints.
+
+##9) Not using referential integrity constraints
+One way in which SQL Server maintains data integrity
+is by using constraints to enforce relationships between
+tables. The query optimizer can also take advantage
+of these constraints when constructing query plans.
+Leaving the constraints off in support of letting the code
+handle it or avoiding the overhead is a common code
+smell. It’s like forgetting to hit the ‘turbo’ button.
+
+##10) Leaving referential integrity constraints disabled
+Some scripting engines disable
+referential integrity during updates.
+You must ensure that WITH CHECK is
+enabled or else the constraint is marked
+as untrusted and therefore won’t be
+used by the optimizer.
+
+##11) Using too many or too few indexes
+A table in a well-designed database with
+an appropriate clustered index will have
+an optimum number of non-clustered
+indexes, depending on usage. Indexes
+incur a cost to the system since they
+must be maintained if data in the table
+changes. The presence of duplicate
+indexes and almost-duplicate indexes is
+a bad sign. So is the presence of unused
+indexes.
 
 
-#Problems with Data Types <a name="Problems_with_Data_Types"></a>
+SQL Server lets you create completely
+redundant and totally duplicate
+indexes. Sometimes this is done in
+the mistaken belief that the order of
+‘included’ (non-key) columns
+is significant. It isn’t!
+
+##12) Misusing NULL values
+The three-value logic required to handle NULL values
+can cause problems in reporting, computed values
+and joins. A NULL value means ‘unknown’, so any
+sort of mathematics or concatenation will result in
+an unknown (NULL) value. Table columns should be
+nullable only when they really need to be. Although
+it can be useful to signify that the value of a column
+is unknown or irrelevant for a particular row, NULLs
+should be permitted only when they’re legitimate for
+the data and application, and fenced around to avoid
+subsequent problems.
+
+
+##13) Using temporary tables for very small resultsets
+Temporary tables can lead to recompiles,
+which can be costly. Table variables,
+while not useful for larger data
+sets (approximately 75 rows
+or more), avoid recompiles
+and are therefore preferred
+in smaller data sets.
+
+##14) Creating a table without specifying a schema
+If you’re creating tables from a script, they must, like
+views and routines, always be defined with two-part
+names. It is possible for different schemas to contain
+the same table name, and there are some perfectly
+legitimate reasons for doing this.
+
+##15) Most tables should have a clustered index
+SQL Server storage is built around the clustered index
+as a fundamental part of the data storage and retrieval
+engine. The data itself is stored with the clustered key.
+All this makes having an appropriate clustered index a
+vital part of database design. The places where a table
+without a clustered index is preferable are rare; which is
+why a missing clustered index is a common code smell
+in database design.
+
+##16) Using the same column name in different tables but with different data types
+Any programmer will assume a sane database design in
+which columns with the same name in different tables
+have the same data type. As a result, they probably won’t
+verify types. Different types is an accident waiting to
+happen.
+
+##17) Defining a table column without explicitly specifying whether it is nullable
+The default nullability for a database’s columns can
+be altered as a setting. Therefore one cannot assume
+whether a column will default to NULL or NOT NULL.
+It is safest to specify it in the column definition, and it is
+essential if you need any portability of your table design.
+
+
+##18) Creating dated copies of the same table to manage table sizes
+Now that SQL Server supports
+table partitioning, it is far
+better to use partitions than
+to create dated tables, such as
+Invoices2012, Invoices2013, etc.
+If old data is no longer used,
+archive the data, store only
+aggregations, or both.
+
+<a name="datatypes"></a>
+#Problems with Data Types 
+
+
+
+
 #Problems with Expressions <a name="Problems_with_Expressions"></a>
 #Difficulties with Query Syntax <a name="Difficulties_with_Query_Syntax"></a>
 #Problems with Naming <a name="Problems_with_Naming"></a>
