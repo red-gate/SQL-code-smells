@@ -8,7 +8,7 @@ SQL code smells
 - <a href="#intro">Introduction</a>
 - <a href="#design">Problems_With_Database_Design</a>
 - <a href="#tabledesign">Problems_with_Table_Design</a>
-- <a href="#datatype">Problems_with_Data_Types</a>
+- <a href="#datatypes">Problems_with_Data_Types</a>
 - [Problems with Expressions](Problems_with_Expressions)
 - [Difficulties with Query Syntax](Difficulties_with_Query_Syntax)
 - [Problems with Naming](Problems_with_Naming)
