@@ -1,7 +1,7 @@
 SQL code smells
 ===============
 
->*This is still a work in progress - we'll add more of the book over the next few days.*
+>*This is still a work in progress - we'll clean up some of the formatting over the next few days.*
 
 #Contents
 
