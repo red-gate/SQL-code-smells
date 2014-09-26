@@ -6,7 +6,7 @@ SQL code smells
 #Contents
 
 - <a href="#intro">Introduction</a>
-- <a href="design">Problems_With_Database_Design</a>
+- <a href="#design">Problems_With_Database_Design</a>
 - [Problems with Table Design](Problems_with_Table_Design)
 - [Problems with Data Types](Problems_with_Data_Types)
 - [Problems with Expressions](Problems_with_Expressions)
