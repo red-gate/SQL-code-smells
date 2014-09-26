@@ -150,6 +150,9 @@ routine.
 This is a generic code smell. If you discover an error
 in code that has been duplicated, the error needs to be
 fixed in several places.  
+
+
+
 Although duplication of code in SQL is often a code
 smell, it is not necessarily so. Duplication is sometimes
 done intentionally where large result sets are involved
@@ -158,6 +161,9 @@ well. Sometimes quite similar queries require very
 different execution plans. There is often a trade-off
 between structure and performance, but sometimes the
 performance issue is exaggerated.  
+
+
+
 Although you can get a performance hit from using
 functions and procedures to prevent duplication by
 encapsulating functionality, it isn’t often enough to
@@ -322,14 +328,8 @@ ORDER BY) was implemented. The TOP option is much
 easier for the query optimizer.
 
 ##97) Using TOP 100% in views, inline functions, derived tables, subqueries, and common table expressions (CTEs).
-This is usually a reflex action to seeing the error The
-ORDER BY clause is invalid in views,
-inline functions, derived tables,
-subqueries, and common table expressions,
-unless TOP or FOR XML is also specified. The
-message is usually a result of your ORDER BY clause
-being included in the wrong statement. You should
-include it only in the outermost query.
+This is usually a reflex action to seeing the error ```The ORDER BY clause is invalid in views, inline functions, derived tables, subqueries, and common table expressions, unless TOP or FOR XML is also specified.``` 
+The message is usually a result of your ORDER BY clause being included in the wrong statement. You should include it only in the outermost query.
 
 ##98) Duplicating names of objects of different types
 Although it is sometimes necessary to use the same
